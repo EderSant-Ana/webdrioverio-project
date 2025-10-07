@@ -12,15 +12,21 @@ pipeline {
             steps {
                 echo 'Limpando workspace e fazendo checkout com credenciais do SCM...'
                 deleteDir()
-                // Garante que o código é clonado usando a credencial PAT configurada na interface do Job.
                 checkout scm
+                
+                // --- CORREÇÃO FINAL PARA EACCES EM .tmp ---
+                // Cria a pasta .tmp no workspace e define permissão universal de escrita.
+                // Isso resolve problemas de permissão quando o Docker mapeia o volume.
+                echo 'Garantindo permissões de escrita (chmod 777) para o volume .tmp...'
+                sh 'mkdir -p .tmp/actual'
+                sh 'chmod -R 777 .tmp'
+                // ------------------------------------------
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Construindo imagem Docker com correções de permissão (Dockerfile com chown)...'
-                // A imagem será construída usando o Dockerfile corrigido.
+                echo 'Construindo imagem Docker com correções internas de permissão (chown)...'
                 sh 'docker build -t wdio-project-image .'
             }
         }
@@ -28,7 +34,6 @@ pipeline {
         stage('Run E2E Tests') {
             steps {
                 echo 'Executando testes E2E com Docker Compose...'
-                // O serviço 'wdio-tests' irá rodar os testes.
                 sh 'docker compose up --build --abort-on-container-exit wdio-tests'
             }
         }
@@ -37,16 +42,24 @@ pipeline {
     post {
         always {
             script {
-                // Limpeza do Docker: Derruba containers, redes e libera recursos.
+                // Limpeza do Docker
                 echo 'Limpando containers e redes do Docker Compose...'
                 sh 'docker compose down'
             }
             
-            // Publicação do Allure Report:
-            // Usando a sintaxe de LISTA simples ('['resultado']') que funciona com a maioria das versões do plugin Allure.
-            allure(['allure-results'])
+            // Publicação do Allure Report: Corrigido para a sintaxe específica do seu plugin.
+            // A maioria dos plugins Allure antigos espera o argumento 'results'.
+            allure(results: 'allure-results')
             
             echo "Pipeline concluído. Status: ${currentBuild.result}"
         }
     }
 }
+```
+
+---
+
+A principal mudança está no bloco `post`:
+
+```groovy
+allure(results: 'allure-results')
