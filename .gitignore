@@ -14,7 +14,7 @@ Variáveis de Ambiente e Arquivos de Configuração Local
 .DS_Store
 
 ==============================
-WebdriverIO & Testes
+WebdriverIO & Testes (Resultados)
 ==============================
 Resultados brutos do Allure (gerados durante a execução do teste)
 /allure-results
@@ -25,9 +25,15 @@ Relatório HTML gerado pelo Allure CLI (allure generate)
 Logs gerados pelo WebdriverIO (se configurados)
 /logs
 /wdio-logs
-wdio-screenshot-*
 
-Diretório de download do navegador (se configurado)
+Exclusão específica para resultados de Visual Regression Testing
+A pasta de interesse:
+/.tmp/actual
+
+Pastas relacionadas que também devem ser excluídas:
+/.tmp/expected
+/.tmp/diff
+/.tmp/
 /downloads
 
 ==============================
@@ -49,7 +55,3 @@ VS Code
 
 JetBrains IDEs (WebStorm, IntelliJ)
 .idea/
-node_modules
-.tmp
-.tmp/temp
-/.tmp

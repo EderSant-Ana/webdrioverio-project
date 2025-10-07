@@ -14,8 +14,9 @@ pipeline {
                 echo 'Clonando o repositório do GitHub...'
                 // Adicionando explicitamente o projeto Git.
                 // Isso garante que a última versão do código esteja no workspace antes do build.
-                git url: 'https://github.com/EderSant-Ana/webdrioverio-project',
-                    branch: 'main' // Assumindo que a branch principal é 'main'
+                sh """
+                    git clone -b main https://${env.GITHUB_TOKEN}@github.com/EderSant-Ana/webdrioverio-project.git
+                """    
             }
         }
 
