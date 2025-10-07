@@ -2,6 +2,13 @@ pipeline {
     // Usa qualquer agente disponível
     agent any
 
+    environment {
+        // Variáveis do ambiente Jenkins
+	    // Mantemos só nome da variável pública; o valor será lido com withCredentials
+	    GITHUB_USERNAME = "EderSant-Ana"
+    }
+
+
     // Opções de pipeline: Se os testes falharem, pule as stages subsequentes.
     options {
         skipStagesAfterUnstable()
