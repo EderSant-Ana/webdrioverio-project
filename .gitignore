@@ -52,3 +52,4 @@ JetBrains IDEs (WebStorm, IntelliJ)
 node_modules
 .tmp
 .tmp/temp
+/.tmp
