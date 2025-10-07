@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  # 1. Serviço que hospeda o navegador (Chrome) e o driver (ChromeDriver)
+  chrome:
+    image: selenium/node-chrome:4.15.0-20231102
+    shm_size: 2gb # Requisito de performance para Chrome
+    volumes:
+      - /dev/shm:/dev/shm
+    depends_on:
+      - selenium-hub
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+    # Mude para 'host' se você quer ver a interface, mas 'container' para CI
+    # - SE_VNC_PORT=5900 # (Opcional, para debug visual)
+      
+  # 2. Serviço central que orquestra a execução (o "cabeça" do grid)
+  selenium-hub:
+    image: selenium/hub:4.15.0-20231102
+    container_name: selenium-hub
+    ports:
+      - "4444:4444" # Expor a porta 4444 para o host para debug
+
+  # 3. Seu serviço de testes WebdriverIO (apenas o código)
+  wdio-tests:
+    build: .
+    image: wdio-ts-runner
+    # Certifique-se de que o container de testes espera pelo Grid
+    depends_on:
+      - chrome 
+    environment:
+      # Use o nome do serviço 'selenium-hub' para se conectar, não 'localhost'
+      - WDIO_HOST=selenium-hub 
+      - WDIO_PORT=4444
+    command: ["npx", "wdio", "run", "wdio.conf.ts"]

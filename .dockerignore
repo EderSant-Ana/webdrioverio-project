@@ -1,0 +1,13 @@
+# Exclui a pasta de módulos (será recriada dentro do container)
+node_modules/
+
+# Exclui pastas de logs ou resultados de teste
+log/
+test-results/
+
+# Exclui o próprio Dockerfile e o contexto de Build
+Dockerfile
+docker-compose.yml
+.dockerignore
+.git
+.gitignore

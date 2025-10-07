@@ -1,0 +1,51 @@
+==============================
+Node.js
+==============================
+/node_modules
+/npm-debug.log*
+/yarn-debug.log*
+/yarn-error.log*
+/pnpm-debug.log*
+/lerna-debug.log*
+
+Variáveis de Ambiente e Arquivos de Configuração Local
+.env
+.env.local
+.DS_Store
+
+==============================
+WebdriverIO & Testes
+==============================
+Resultados brutos do Allure (gerados durante a execução do teste)
+/allure-results
+
+Relatório HTML gerado pelo Allure CLI (allure generate)
+/allure-report
+
+Logs gerados pelo WebdriverIO (se configurados)
+/logs
+/wdio-logs
+wdio-screenshot-*
+
+Diretório de download do navegador (se configurado)
+/downloads
+
+==============================
+TypeScript & Compilação
+==============================
+Arquivos JavaScript transpilados (se o tsconfig estiver configurado para output)
+/dist
+/out
+
+Se você tiver arquivos .js ao lado dos seus arquivos .ts
+*.js
+*.d.ts
+
+==============================
+Configurações IDE e Editor
+==============================
+VS Code
+.vscode/
+
+JetBrains IDEs (WebStorm, IntelliJ)
+.idea/
