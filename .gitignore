@@ -50,3 +50,5 @@ VS Code
 JetBrains IDEs (WebStorm, IntelliJ)
 .idea/
 node_modules
+.tmp
+.tmp/temp
