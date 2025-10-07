@@ -12,15 +12,15 @@ pipeline {
             steps {
                 echo 'Limpando workspace e fazendo checkout com credenciais do SCM...'
                 deleteDir()
-                // Este comando usa a URL e as Credenciais configuradas na interface do Job.
+                // Garante que o código é clonado usando a credencial PAT configurada na interface do Job.
                 checkout scm
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Construindo imagem Docker com correções de permissão...'
-                // A imagem será construída usando o Dockerfile corrigido (com chown para EACCES).
+                echo 'Construindo imagem Docker com correções de permissão (Dockerfile com chown)...'
+                // A imagem será construída usando o Dockerfile corrigido.
                 sh 'docker build -t wdio-project-image .'
             }
         }
@@ -28,8 +28,7 @@ pipeline {
         stage('Run E2E Tests') {
             steps {
                 echo 'Executando testes E2E com Docker Compose...'
-                // O docker compose up executa os containers (selenium-hub, chrome, wdio-tests).
-                // O '--abort-on-container-exit' derruba tudo após o container de teste terminar.
+                // O serviço 'wdio-tests' irá rodar os testes.
                 sh 'docker compose up --build --abort-on-container-exit wdio-tests'
             }
         }
@@ -44,11 +43,8 @@ pipeline {
             }
             
             // Publicação do Allure Report:
-            // Usando a sintaxe moderna do plugin Allure.
-            // A pasta 'allure-results' é mapeada para o workspace via docker-compose.yml.
-            allure([
-                allureResults: 'allure-results'
-            ])
+            // Usando a sintaxe de LISTA simples ('['resultado']') que funciona com a maioria das versões do plugin Allure.
+            allure(['allure-results'])
             
             echo "Pipeline concluído. Status: ${currentBuild.result}"
         }

@@ -21,8 +21,8 @@ COPY package*.json ./
 # Mudar temporariamente para root para instalar as dependências
 USER root
 RUN npm install
-# Corrigir a posse da pasta para o usuário 'node'
-# Isso resolve o EACCES ao criar a pasta 'allure-results'
+# Corrigir a posse da pasta para o usuário 'node' de forma recursiva.
+# Isso garante que tanto 'allure-results' quanto '.tmp' possam ser criados.
 RUN chown -R node:node /usr/src/app
 
 # Voltar para o usuário 'node' (não-root) para maior segurança na execução
