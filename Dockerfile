@@ -1,16 +1,6 @@
-# Use uma imagem base completa do Node LTS
-FROM node:lts 
+FROM docker.io/library/node:lts
 
-# Define o diretório de trabalho
-WORKDIR /usr/src/app
-
-# Define o usuário node como o proprietário dos arquivos
-# Isso ajuda a evitar problemas de permissão durante a instalação
-USER node 
-
-# Instale as dependências de sistema para o Chrome/Chromedriver
-# Use 'root' temporariamente para instalar pacotes de sistema
-USER root
+# Instalar dependências necessárias para o Chrome (Headless)
 RUN apt-get update && apt-get install -y \
     wget \
     gnupg \
@@ -20,23 +10,27 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libasound2 \
     mesa-utils \
-    # Limpa o cache para reduzir o tamanho final da imagem
+    # Limpeza para reduzir o tamanho da imagem
     && rm -rf /var/lib/apt/lists/*
 
-# Volta para o usuário node para as operações npm
-USER node
+# Definir o diretório de trabalho dentro do container
+WORKDIR /usr/src/app
 
-# Copia os arquivos package.json e package-lock.json
+# Copiar arquivos de dependência
 COPY package*.json ./
 
-# Instala as dependências do Node.js
-# As dependências globais ou os drivers serão instalados aqui
+# --- Correção de Permissão EACCES ---
+# Mudar temporariamente para o usuário root para instalar as dependências
+# Isso resolve o problema de permissão ao criar a pasta node_modules
+USER root
 RUN npm install
+# Voltar para o usuário 'node' (não-root) para maior segurança na execução
+USER node
+# ------------------------------------
 
-# Copia o restante do código da aplicação (testes, configs)
+# Copiar o restante do código do projeto
 COPY . .
 
-# Comando padrão
-# No Jenkins, você não usará este CMD. O docker-compose.yml irá substituí-lo
-# pelo comando de espera ativa (wait-for-it) + npx wdio.
-CMD ["npx", "wdio", "run", "wdio.conf.ts"]
+# Comando de entrada: O container do teste só precisa de shell, pois o Docker Compose
+# executa o comando 'wdio' no serviço 'wdio-tests'
+CMD ["/bin/bash"]
