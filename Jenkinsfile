@@ -14,24 +14,26 @@ pipeline {
                 deleteDir()
                 checkout scm
                 
-                // Cria a pasta .tmp no workspace e define permissão universal de escrita.
-                echo 'Garantindo permissões de escrita (chmod 777) para o volume .tmp...'
-                sh 'mkdir -p .tmp/actual'
-                sh 'chmod -R 777 .tmp'
+                // CRÍTICO: Cria e garante permissão de escrita (777) para os diretórios 
+                // que serão mapeados como volumes no docker-compose.yml. 
+                // Isso é essencial para que o container 'wdio-tests' (rodando como usuário 'node') 
+                // possa gravar os relatórios e imagens de regressão visual no host.
+                echo 'Garantindo permissões de escrita para os diretórios de resultados...'
+                sh 'mkdir -p allure-results .tmp/actual .tmp/baseline'
+                sh 'chmod -R 777 allure-results .tmp'
             }
         }
 
-        stage('Build Docker Image') {
-            steps {
-                echo 'Construindo imagem Docker com correções internas de permissão (chown)...'
-                sh 'docker build -t wdio-project-image .'
-            }
-        }
+        /* * O stage 'Build Docker Image' foi removido. 
+        * O Docker Compose fará o build da imagem 'wdio-tests' automaticamente 
+        * ao rodar o comando 'docker compose up --build'.
+        */
 
         stage('Run E2E Tests') {
             steps {
                 echo 'Executando testes E2E com Docker Compose...'
-                // Se o teste falhar por regressão visual, ele ainda pode gerar resultados Allure válidos.
+                // --build: Garante que a imagem wdio-tests seja construída ou atualizada.
+                // --abort-on-container-exit: Para o pipeline se o serviço de testes (wdio-tests) falhar.
                 sh 'docker compose up --build --abort-on-container-exit wdio-tests'
             }
         }
@@ -45,8 +47,7 @@ pipeline {
                 sh 'docker compose down'
             }
             
-            // Publicação do Allure Report: Sintaxe corrigida para List<ResultsConfig>.
-            // O caminho do resultado é empacotado em um mapa com a chave 'path', dentro de uma lista.
+            // Publicação do Allure Report.
             allure(results: [[path: 'allure-results']])
             
             echo "Pipeline concluído. Status: ${currentBuild.result}"

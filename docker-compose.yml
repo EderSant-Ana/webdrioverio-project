@@ -12,9 +12,7 @@ services:
       - SE_EVENT_BUS_HOST=selenium-hub
       - SE_EVENT_BUS_PUBLISH_PORT=4442
       - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-    # Mude para 'host' se você quer ver a interface, mas 'container' para CI
-    # - SE_VNC_PORT=5900 # (Opcional, para debug visual)
-      
+
   # 2. Serviço central que orquestra a execução (o "cabeça" do grid)
   selenium-hub:
     image: selenium/hub:4.15.0-20231102
@@ -22,15 +20,29 @@ services:
     ports:
       - "4444:4444" # Expor a porta 4444 para o host para debug
 
-  # 3. Seu serviço de testes WebdriverIO (apenas o código)
+  # 3. Seu serviço de testes WebdriverIO
   wdio-tests:
     build: .
     image: wdio-ts-runner
-    # Certifique-se de que o container de testes espera pelo Grid
+    
+    # CRÍTICO: Mapeia o diretório local para dentro do container.
+    # Isso permite que o container acesse os arquivos de código e que os resultados 
+    # (allure-results, .tmp) sejam persistidos no host/workspace do Jenkins.
+    volumes:
+      - .:/usr/src/app
+      # O volume abaixo é necessário para evitar que a pasta node_modules do HOST 
+      # sobrescreva o node_modules recém-instalado DENTRO do container.
+      - /usr/src/app/node_modules 
+    
+    # Garante que o container de testes espera pelo Grid
     depends_on:
       - chrome 
+      - selenium-hub 
+    
     environment:
-      # Use o nome do serviço 'selenium-hub' para se conectar, não 'localhost'
+      # Usa o nome do serviço 'selenium-hub' para se conectar (modo Grid)
       - WDIO_HOST=selenium-hub 
       - WDIO_PORT=4444
+    
+    # Comando de execução
     command: ["npx", "wdio", "run", "wdio.conf.ts"]

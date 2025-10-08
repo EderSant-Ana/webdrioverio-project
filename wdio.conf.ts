@@ -1,61 +1,61 @@
 import type { Options } from '@wdio/types'
 
-// Detecta se o WebdriverIO está sendo executado dentro de um container Docker com Selenium Grid
-const isDockerGrid = process.env.WDIO_HOST === 'selenium-hub'
+// Detecta se está rodando no Docker Grid (variável de ambiente definida)
+// O WDIO_HOST é definido nos ambientes docker-compose e Jenkinsfile
+const isDockerGrid = !!process.env.WDIO_HOST
 
 export const config: Options.WebdriverIO = {
-    //
     // ====================
     // Host / Grid Settings
     // ====================
-    hostname: isDockerGrid ? process.env.WDIO_HOST : 'localhost',
+    // Sempre usa o nome do serviço 'selenium-hub' ou 'localhost' para local/host
+    hostname: isDockerGrid ? 'selenium-hub' : 'localhost',
     port: isDockerGrid ? 4444 : undefined,
     path: isDockerGrid ? '/wd/hub' : '/',
 
-    //
     // ====================
     // Runner Configuration
     // ====================
-    runner: 'local',
-    autoCompileOpts: {
-        tsNodeOpts: {
-            transpileOnly: true,
-            project: './tsconfig.json'
-        }
-    },
+    // REMOVIDO: Quando usamos o Grid, não definimos um runner local explícito.
+    // O WebdriverIO se conecta diretamente ao Grid (hostname:port).
+    // O comando de execução (npx wdio run ...) se encarrega de iniciar o framework.
+    // runner: 'local', // Linha removida
+    tsConfigPath: './tsconfig.json',
 
-    //
     // ====================
     // Test Files
     // ====================
     specs: ['./test/specs/**/*.ts'],
     exclude: [],
 
-    //
     // ====================
     // Capabilities
     // ====================
     maxInstances: 5,
+
     capabilities: [
         {
             browserName: 'chrome',
             acceptInsecureCerts: true,
             'goog:chromeOptions': {
                 args: [
-                    '--headless',
-                    '--no-sandbox',
-                    '--disable-dev-shm-usage',
+                    '--headless=new',             // Novo modo headless mais estável
                     '--disable-gpu',
-                    '--disable-extensions',
-                    '--window-size=1920,1080'
-                ]
+                    '--disable-dev-shm-usage',
+                    '--no-sandbox',
+                    '--start-maximized',
+                    '--disable-blink-features=AutomationControlled'
+                ],
+            },
+            // 🔧 Desativa o uso do protocolo BiDi para evitar o erro "Could not connect to Bidi protocol"
+            'wdio:options': {
+                disableBiDi: true
             }
         }
     ],
 
-    //
     // ====================
-    // Logging / Timeouts
+    // Logging & Timeouts
     // ====================
     logLevel: 'info',
     bail: 0,
@@ -63,17 +63,17 @@ export const config: Options.WebdriverIO = {
     connectionRetryTimeout: 120000,
     connectionRetryCount: 3,
 
-    //
     // ====================
     // Services
     // ====================
-    // ✅ Em ambiente local, o Chrome é gerenciado automaticamente.
-    // ✅ Em ambiente Docker/Grid, conectamos apenas ao Hub.
-    services: isDockerGrid ? [] : ['chromedriver'],
+    // Usamos 'visual' em ambos os casos, mas removemos 'chromedriver' e 'xvfb'
+    // quando estamos no Grid (isDockerGrid).
+    services: isDockerGrid
+        ? ['visual'] // Executando via Selenium Grid (Docker): Apenas o serviço visual
+        : ['chromedriver', 'visual'], // Executando localmente: Usa ChromeDriver para iniciar o navegador
 
-    //
     // ====================
-    // Framework / Reporters
+    // Framework & Reporting
     // ====================
     framework: 'mocha',
     reporters: [
@@ -83,25 +83,20 @@ export const config: Options.WebdriverIO = {
             {
                 outputDir: 'allure-results',
                 disableWebdriverStepsReporting: true,
-                disableWebdriverScreenshotsReporting: false
+                disableWebdriverScreenshotsReporting: false,
             }
         ]
     ],
 
-    //
-    // ====================
-    // Mocha Options
-    // ====================
     mochaOpts: {
         ui: 'bdd',
         timeout: 60000
     },
 
-    //
     // ====================
-    // Hooks (opcionais)
+    // Hooks (exemplo opcional)
     // ====================
-    before: async function () {
-        console.log(`🔧 Executando testes em: ${isDockerGrid ? 'Docker Grid' : 'Ambiente Local'}`)
+    before: function () {
+        console.log('🔧 Iniciando teste com WDIO...')
     }
-}
+} as unknown as Options.WebdriverIO

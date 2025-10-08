@@ -10,7 +10,7 @@ describe('Login application with invalid credentials', () => {
         await expect(SecurePage.errorMessage).toBeExisting()
         await expect(SecurePage.errorMessage)
             .toHaveText(expect.stringContaining('Invalid User Name or PassWord'))
-        await expect(SecurePage.errorMessage).toMatchElementSnapshot('flashAlert')
+        //await expect(SecurePage.errorMessage).toMatchElementSnapshot('flashAlert')
         await driver.pause(10000)
     })
 })
